@@ -9,6 +9,7 @@ import jsonlines
 import inspect
 import logging
 import os
+import progressbar
 import re
 import shutil
 import sys
@@ -49,20 +50,21 @@ def main(args):
     """
     logger = logging.getLogger(sys._getframe().f_code.co_name)
     fn_pdata = get_pleiades(args.pleiades)
+    print('\nreading json from local file {}'.format(fn_pdata))
     with open(fn_pdata, 'r') as f_in:
-        print('reading json from local file {}'.format(fn_pdata))
         places = json.load(f_in)
+
     fn_out = '{}.jsonl'.format(os.path.splitext(os.path.basename(fn_pdata))[0])
+    bar = progressbar.ProgressBar(redirect_stdout=True)
     with jsonlines.open(fn_out, mode='w', sort_keys=True,
                         compact=True) as f_out:
         print('writing json to local  file {}'.format(fn_out))
-        print('    [', end='')
-        for i, place in enumerate(places['@graph']):
+        i = 0
+        for place in bar(places['@graph']):
             logger.debug(place['title'])
             f_out.write(place)
-            if i % 1000 == 0:
-                print('.',  end='')
-    print(']')
+            i += 1
+
     print('wrote {} json objects to {}'.format(i, fn_out))
 
 
