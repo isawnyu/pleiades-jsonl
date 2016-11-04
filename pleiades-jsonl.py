@@ -1,17 +1,23 @@
-"""
-Python 3 script template (changeme)
+"""Convert Pleiades JSON dump to JSON Lines (new-line-delimited JSON)
 """
 
 import argparse
 from functools import wraps
+import gzip
+import json
+import jsonlines
 import inspect
 import logging
 import os
 import re
+import shutil
 import sys
 import traceback
+import wget
 
 DEFAULT_LOG_LEVEL = logging.WARNING
+DEFAULT_PLEIADES_URI = ('http://atlantides.org/downloads/pleiades/json/'
+                        'pleiades-places-latest.json.gz')
 POSITIONAL_ARGUMENTS = [
     ['-l', '--loglevel', logging.getLevelName(DEFAULT_LOG_LEVEL),
         'desired logging level (' +
@@ -19,6 +25,8 @@ POSITIONAL_ARGUMENTS = [
     ['-v', '--verbose', False, 'verbose output (logging level == INFO)'],
     ['-w', '--veryverbose', False,
         'very verbose output (logging level == DEBUG)'],
+    ['-p', '--pleiades', DEFAULT_PLEIADES_URI, 'Pleiades JSON dataset to'
+        ' use (default: {})'.format(DEFAULT_PLEIADES_URI)]
 ]
 
 
@@ -39,8 +47,41 @@ def main(args):
     """
     main function
     """
-    # logger = logging.getLogger(sys._getframe().f_code.co_name)
-    pass
+    logger = logging.getLogger(sys._getframe().f_code.co_name)
+    fn_pdata = get_pleiades(args.pleiades)
+    with open(fn_pdata, 'r') as f_in:
+        print('reading json from local file {}'.format(fn_pdata))
+        places = json.load(f_in)
+    fn_out = '{}.jsonl'.format(os.path.splitext(os.path.basename(fn_pdata))[0])
+    with jsonlines.open(fn_out, mode='w', sort_keys=True,
+                        compact=True) as f_out:
+        print('writing json to local  file {}'.format(fn_out))
+        print('    [', end='')
+        for i, place in enumerate(places['@graph']):
+            logger.debug(place['title'])
+            f_out.write(place)
+            if i % 1000 == 0:
+                print('.',  end='')
+    print(']')
+    print('wrote {} json objects to {}'.format(i, fn_out))
+
+
+@arglogger
+def get_pleiades(where):
+    logger = logging.getLogger(sys._getframe().f_code.co_name)
+    print('fetching {}'.format(where))
+    if where.startswith('http'):
+        fn = wget.download(where)
+    else:
+        fn = where
+    logger.debug('pleiades filename: {}'.format(fn))
+    if fn.endswith('.gz'):
+        with gzip.open(fn, 'rb') as f_in:
+            with open(fn[:-3], 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        fn = fn[:-3]
+        logger.debug('uncompressed to: {}'.format(fn))
+    return fn
 
 
 if __name__ == "__main__":
