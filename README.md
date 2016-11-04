@@ -42,9 +42,9 @@ The script writes the result to the local directory with teh filename: ```{input
 ## Dependencies
 
  * Python 3.x (tested on 3.5.2)
- * jsonlines
- * progressbar2
- * wget
+ * [jsonlines](https://jsonlines.readthedocs.io/en/latest/)
+ * [progressbar2](http://pythonhosted.org/progressbar2/)
+ * [wget](https://pypi.python.org/pypi/wget)
 
 ## Todo
 
