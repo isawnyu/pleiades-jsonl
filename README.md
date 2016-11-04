@@ -1,5 +1,16 @@
 # (Down)load Pleiades gazetteer JSON dumps and convert to JSONL
 
+## What?
+
+### Pleiades
+
+A community-built gazetteer and graph of ancient places: https://pleiades.stoa.org/
+
+### JSON Lines
+
+A convenient format for storing structured data that may be processed one record at a time (a.k.a. newline-delimited JSON): http://jsonlines.org/
+
+
 ## Usage
 
 ```
